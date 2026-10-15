@@ -15,6 +15,15 @@ public class MainFrame extends JFrame {
     private final DocumentSession session = new DocumentSession();
     private final FileService fileService = new FileService();
 
+
+    private void updateTitle() {
+        String name = session.hasFile()
+                ? session.getCurrentFile().getFileName().toString()
+                : "Untitled";
+
+        setTitle(name + " - MiniNotepad");
+    }
+
     public void openFile() {
         JFileChooser chooser = new JFileChooser();
         int result = chooser.showOpenDialog(this);
@@ -24,7 +33,7 @@ public class MainFrame extends JFrame {
                 String content = fileService.read(path);
                 textArea.setText(content);
                 session.markSaved(path);
-                setTitle(path.getFileName() + " - MiniNotepad");
+                updateTitle();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -35,6 +44,54 @@ public class MainFrame extends JFrame {
             }
         }
     }
+    public void saveFileAs() {
+        JFileChooser chooser = new JFileChooser();
+        int result = chooser.showSaveDialog(this);
+
+        if(result == JFileChooser.APPROVE_OPTION){
+            Path path = chooser.getSelectedFile().toPath();
+            try {
+                fileService.write(path, textArea.getText());
+                session.markSaved(path);
+                updateTitle();
+            } catch (IOException e){
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error saving file: " + e.getMessage(),
+                        "Save Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }else{
+
+        }
+
+    }
+    public void saveFile() {
+        if (session.hasFile()) {
+            Path path = session.getCurrentFile();
+            try {
+                fileService.write(path, textArea.getText());
+                session.markSaved(path);
+                updateTitle();
+
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error saving file: " + e.getMessage(),
+                        "Save Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        } else {
+            saveFileAs();
+        }
+    }
+    public void newFile() {
+        textArea.setText("");
+        session.reset();
+        updateTitle();
+    }
 
     public MainFrame() {
         setTitle("Untitled - MiniNotepad");
@@ -42,12 +99,14 @@ public class MainFrame extends JFrame {
 
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        JMenuItem openItem = new JMenuItem(new OpenAction(this));
-        fileMenu.add(openItem);
+
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
-
+        fileMenu.add(new JMenuItem(new NewAction(this)));
+        fileMenu.add(new JMenuItem(new OpenAction(this)));
+        fileMenu.add(new JMenuItem(new SaveAction(this)));
+        fileMenu.add(new JMenuItem(new SaveAsAction(this)));
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600);
