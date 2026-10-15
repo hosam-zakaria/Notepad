@@ -19,6 +19,67 @@ public class GapBuffer implements CharSequence{
         return data.length - (gapEnd - gapStart);
     }
 
+    private void moveGap(int pos) {
+        if (pos < gapStart) {
+            int distance = gapStart - pos;
+
+            for (int i = 0; i < distance; i++) {
+                data[gapEnd - 1 - i] = data[gapStart - 1 - i];
+            }
+
+            gapStart = pos;
+            gapEnd -= distance;
+        }else if (pos > gapStart) {
+            int distance = pos - gapStart;
+
+            for (int i = 0; i < distance; i++) {
+                data[gapStart + i] = data[gapEnd + i];
+            }
+
+            gapStart += distance;
+            gapEnd += distance;
+        }
+    }
+    private void ensureCapacity(int required) {
+        int gapSize = gapEnd - gapStart;
+        if (gapSize >= required) {
+            return;
+        }
+
+        int newCapacity = Math.max(data.length * 2,length() + required);
+        char[] newData = new char[newCapacity];
+        System.arraycopy(data, 0, newData, 0, gapStart);
+
+        int suffixLength = data.length - gapEnd;
+        int newGapEnd = newCapacity - suffixLength;
+
+        System.arraycopy(data, gapEnd, newData,
+                newGapEnd, suffixLength);
+
+        data = newData;
+        gapEnd = newGapEnd;
+    }
+    public void insert(int index, String text) {
+        if (index < 0 || index > length()) {
+            throw new IndexOutOfBoundsException("index=" + index + ", length=" + length());
+        }
+        ensureCapacity(text.length());
+        moveGap(index);
+        for (int i = 0; i < text.length(); i++) {
+            data[gapStart] = text.charAt(i);
+            gapStart++;
+        }
+    }
+    public void delete(int index, int len) {
+        if (index < 0 || len < 0 || index + len > length()) {
+            throw new IndexOutOfBoundsException(
+                    "index=" + index + ", length=" + length()
+            );
+        }
+        moveGap(index + len);
+        gapStart -= len;
+    }
+
     @Override
     public char charAt(int index) {
         if (index < 0 || index >= length()) {
@@ -41,6 +102,13 @@ public class GapBuffer implements CharSequence{
     }
     @Override
     public CharSequence subSequence(int start, int end) {
-        throw new UnsupportedOperationException();
+        if (start < 0 || end > length() || start > end) {
+            throw new IndexOutOfBoundsException(
+                    "start=" + start + ", end=" + end +
+                            ", length=" + length()
+            );
+        }
+
+        return toString().substring(start, end);
     }
 }
