@@ -6,6 +6,7 @@ import javax.swing.text.PlainDocument;
 import com.hossam.notepad.buffer.GapBufferContent;
 
 import javax.swing.*;
+import javax.swing.undo.UndoManager;
 import java.awt.BorderLayout;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +17,7 @@ public class MainFrame extends JFrame {
     private final JTextArea textArea = new JTextArea(new PlainDocument(new GapBufferContent()));
     private final DocumentSession session = new DocumentSession();
     private final FileService fileService = new FileService();
-
+    private final UndoManager undoManager = new UndoManager();
 
     private void updateTitle() {
         String name = session.hasFile()
@@ -36,6 +37,7 @@ public class MainFrame extends JFrame {
                 textArea.setText(content);
                 session.markSaved(path);
                 updateTitle();
+                undoManager.discardAllEdits();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -93,8 +95,19 @@ public class MainFrame extends JFrame {
         textArea.setText("");
         session.reset();
         updateTitle();
+        undoManager.discardAllEdits();
+    }
+    public void undo() {
+        if (undoManager.canUndo()) {
+            undoManager.undo();
+        }
     }
 
+    public void redo() {
+        if (undoManager.canRedo()) {
+            undoManager.redo();
+        }
+    }
     public MainFrame() {
         setTitle("Untitled - MiniNotepad");
         add(new JScrollPane(textArea), BorderLayout.CENTER);
@@ -109,9 +122,14 @@ public class MainFrame extends JFrame {
         fileMenu.add(new JMenuItem(new OpenAction(this)));
         fileMenu.add(new JMenuItem(new SaveAction(this)));
         fileMenu.add(new JMenuItem(new SaveAsAction(this)));
-
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.add(new JMenuItem(new UndoAction(this)));
+        editMenu.add(new JMenuItem(new RedoAction(this)));
+        menuBar.add(editMenu);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600);
         setLocationRelativeTo(null);
+        textArea.getDocument().addUndoableEditListener(undoManager);
+        undoManager.setLimit(200);
     }
 }
