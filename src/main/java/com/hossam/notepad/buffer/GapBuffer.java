@@ -109,6 +109,11 @@ public class GapBuffer implements CharSequence{
             );
         }
 
-        return toString().substring(start, end);
+        int len = end - start;
+        char[] chars = new char[len];
+        for (int i = 0; i < len; i++) {
+            chars[i] = charAt(start + i);
+        }
+        return new String(chars);
     }
 }

@@ -2,6 +2,8 @@ package com.hossam.notepad.ui;
 
 import com.hossam.notepad.service.DocumentSession;
 import com.hossam.notepad.service.FileService;
+import javax.swing.text.PlainDocument;
+import com.hossam.notepad.buffer.GapBufferContent;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -11,7 +13,7 @@ import java.nio.file.Path;
 
 public class MainFrame extends JFrame {
 
-    private final JTextArea textArea = new JTextArea();
+    private final JTextArea textArea = new JTextArea(new PlainDocument(new GapBufferContent()));
     private final DocumentSession session = new DocumentSession();
     private final FileService fileService = new FileService();
 

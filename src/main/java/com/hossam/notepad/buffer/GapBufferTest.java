@@ -64,6 +64,7 @@ class GapBufferTest {
         assertThrows(IndexOutOfBoundsException.class, () -> b.insert(1, "x"));
     }
 
+
     @Test
     void randomOperationsMatchStringBuilder() {
         for (long seed = 1; seed <= 20; seed++) {
